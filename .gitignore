@@ -1,0 +1,7 @@
+venv/
+_Archive/
+.env
+folder_monitor.log
+__pycache__/
+*pyc
+assets/
