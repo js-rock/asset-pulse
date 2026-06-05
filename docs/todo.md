@@ -10,3 +10,4 @@ check source file count vs watch folder file count - if different, report error
 CREEP:
 change watch folder file path to user input OR option to drag drop (tkinter or something else?)
 Security! (once advanced features are added)
+Notifier using telegram of discord

@@ -5,3 +5,4 @@ folder_monitor.log
 __pycache__/
 *pyc
 assets/
+assetpulse/
