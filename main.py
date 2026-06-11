@@ -1,3 +1,4 @@
+# Last remaining item: check source file count vs watch folder file count - if different, report error
 """
 Main entry point for Folder Monitor.
 """
@@ -12,8 +13,10 @@ from logging.handlers import RotatingFileHandler
 # Add the script directory to path to ensure imports work regardless of CWD
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from config import config
-from handler import FolderMonitorHandler, BatchProcessor
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from src.config import config
+from src.handler import FolderMonitorHandler, BatchProcessor
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 

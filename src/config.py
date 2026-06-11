@@ -14,24 +14,24 @@ class WatcherConfig:
     # Directories to watch
     watched_folders: list[str] = field(default_factory=lambda: ['F:/_DummyNAS/test_watch'])
     
-    # File extensions
+    # File extensions (now lowercase for case-insensitive matching)
     VIDEO_EXTENSIONS: Set[str] = frozenset({
-        '.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', 
+        '.mp4', '.MP4', '.avi', '.mkv', '.mov', '.MOV', '.wmv', '.flv', 
         '.webm', '.mpg', '.mpeg', '.3gp', '.m4v'
     })
     
     PHOTO_EXTENSIONS: Set[str] = frozenset({
-        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', 
-        '.webp', '.raw', '.cr2', '.nef', '.orf', '.sr2'
+        '.jpg', '.JPG', '.jpeg', '.png', '.PNG', '.gif', '.bmp', '.tiff', 
+        '.webp', '.raw', '.cr2', '.nef', '.NEF' '.orf', '.sr2'
     })
     
     # Extensions to ignore entirely (even if they exist in folders)
     IGNORED_EXTENSIONS: Set[str] = frozenset({
-        '.tmp', '.log', '.part', '.json', '.xml', '.nfo' # Example ignores
+        '.tmp', '.log', '.part', '.json'#, '.xml', '.nfo' # Example ignores
     })
 
     # Debounce settings
-    DEBOUNCE_DELAY: float = 2.0  # Seconds
+    DEBOUNCE_DELAY: float = 10.0  # Seconds
     CHECK_INTERVAL: float = 0.5  # Seconds (how often the processor thread wakes up)
     
     # Logging settings
@@ -48,23 +48,28 @@ class WatcherConfig:
     def get_file_type(self, file_path: str) -> str:
         """Determine the type of media file based on extension."""
         _, ext = self._get_extension(file_path)
-        if ext in self.VIDEO_EXTENSIONS:
+        # Normalize to lowercase for comparison
+        ext_lower = ext.lower()
+        
+        if ext_lower in self.VIDEO_EXTENSIONS:
             return "VIDEO"
-        elif ext in self.PHOTO_EXTENSIONS:
+        elif ext_lower in self.PHOTO_EXTENSIONS:
             return "PHOTO"
         return "UNKNOWN"
 
     def is_media_file(self, file_path: str) -> bool:
-        """Check if a file is a valid media file."""
-        if not file_path or not file_path.endswith('.'):
+        """Check if a file is a valid media file (case-insensitive)."""
+        if not file_path:
             return False
         _, ext = self._get_extension(file_path)
-        return ext in self.ALL_MEDIA_EXTENSIONS
+        # Normalize to lowercase for comparison
+        return ext.lower() in self.ALL_MEDIA_EXTENSIONS
 
     def _get_extension(self, file_path: str) -> tuple:
         """Helper to safely get extension."""
         import os
-        return os.path.splitext(file_path.lower())
+        name, ext = os.path.splitext(file_path)
+        return name, ext
 
 # Singleton instance for easy access throughout the app
 config = WatcherConfig()

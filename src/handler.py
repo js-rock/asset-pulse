@@ -9,7 +9,7 @@ import logging
 from threading import Lock
 from watchdog.events import FileSystemEventHandler
 
-from config import config
+from src.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -26,36 +26,64 @@ class FolderMonitorHandler(FileSystemEventHandler):
         return os.path.abspath(os.path.dirname(path))
 
     def _process_batch(self, parent_path: str, items: list):
-        """Process and report a batch of new items"""
+        """Process and report a batch of new or deleted items"""
         if not items:
             return
 
-        # Filter out items that might have been moved/deleted before processing
-        valid_items = [i for i in items if os.path.exists(i)]
-        if not valid_items:
+        # Separate existing and deleted items
+        # If an item exists, it was likely created or moved there.
+        # If it doesn't exist, it was likely deleted.
+        existing_items = [i for i in items if os.path.exists(i)]
+        deleted_items = [i for i in items if not os.path.exists(i)]
+
+        # If there are no existing items, we treat it as a deletion batch
+        if not existing_items:
+            self._report_deleted_items(parent_path, deleted_items)
             return
 
+        # If there are existing items, process them as "Found"
+        self._report_found_items(parent_path, existing_items)
+        
+        # If there are also deletions, report them separately
+        if deleted_items:
+            self._report_deleted_items(parent_path, deleted_items)
+
+    def _report_found_items(self, parent_path: str, items: list):
+        """Process and report found items with specific batch type headers"""
+        
         # Classify items
-        media_items = [i for i in valid_items if config.is_media_file(i)]
-        folders = [i for i in valid_items if os.path.isdir(i)]
+        media_items = [i for i in items if config.is_media_file(i)]
+        folders = [i for i in items if os.path.isdir(i)]
         
         # Non-media files: Files that exist, are files, have an extension, but are NOT media
         non_media_items = []
-        for i in valid_items:
+        for i in items:
             if not os.path.isdir(i):
                 _, ext = config._get_extension(i)
                 # Only include if it HAS an extension, is NOT ignored, and is NOT media
                 if ext and ext not in config.IGNORED_EXTENSIONS and ext not in config.ALL_MEDIA_EXTENSIONS:
                     non_media_items.append(i)
 
-        file_count = len(valid_items) - len(folders)
+        file_count = len(items) - len(folders)
         folder_count = len(folders)
         media_count = len(media_items)
         non_media_count = len(non_media_items)
 
-        # Log summary for the parent folder
-        logger.info(f"Folder Batch Detected: {parent_path}")
-        
+        # Only show the "Batch Detected" header if we have MORE than 1 item
+        # This makes single file/folder drops much cleaner in the logs.
+        if len(items) > 1:
+            # Determine the primary type of this batch to customize the log header
+            if media_count > 0 and folder_count == 0 and non_media_count == 0:
+                header = f"Media Batch Detected: {parent_path}"
+            elif folder_count > 0 and media_count == 0 and non_media_count == 0:
+                header = f"Folder Batch Detected: {parent_path}"
+            elif non_media_count > 0 and media_count == 0 and folder_count == 0:
+                header = f"File Batch Detected: {parent_path}"
+            else:
+                header = f"Batch Detected: {parent_path}"
+            
+            logger.info(header)
+
         # Report Media Files if any
         if media_count > 0:
             logger.info(f"  -> Found {media_count} new media file(s) in batch")
@@ -71,14 +99,63 @@ class FolderMonitorHandler(FileSystemEventHandler):
         if folder_count > 0:
             logger.info(f"  -> Found {folder_count} new subfolder(s)")
 
-        # Report Non-Media Files if any
+        # --- REPORT NON-MEDIA FILES (IMPROVED FORMATTING) ---
         if non_media_count > 0:
-            non_media_names = [os.path.basename(item) for item in non_media_items]
-            logger.info(f"  -> Found {non_media_count} non-media file(s): {', '.join(non_media_names)}")
+            # Group by extension
+            from collections import defaultdict
+            non_media_by_ext = defaultdict(list)
+            for f in non_media_items:
+                _, ext = config._get_extension(f)
+                non_media_by_ext[ext].append(os.path.basename(f))
+
+            # Report each extension group
+            for ext, filenames in non_media_by_ext.items():
+                # Sort items for consistency
+                filenames.sort()
+
+                # If there are many files, break them into chunk of 5 per line
+                chunk_size = 5
+                for i in range(0, len(filenames), chunk_size):
+                    chunk = filenames[i:i+chunk_size]
+                    if len(chunk) == 1:
+                        logger.info(f"  - {len(non_media_by_ext[ext])}x {ext}: {chunk[0]}")
+                    else:
+                        # Join the chunk names
+                        logger.info(f"  - {len(non_media_by_ext[ext])}x {ext}: {', '.join(chunk)}{'...' if len(chunk) == chunk_size and i+chunk_size < len(filenames) else ''}")        
+                # If the total count is huge, give a summary instead of listing it all
+                # if len(non_media_by_ext[ext]) > 20:
+                #     logger.info(f"    -> ... and {len(non_media_by_ext[ext]) - 20} more {ext} files")
 
         # Trigger notification if there are media files
         if media_count > 0:
             self.show_batch_notification(media_items)
+
+    def _report_deleted_items(self, parent_path: str, items: list):
+        """Report items that were deleted"""
+        logger.info(f"Folder Deletions Detected: {parent_path}")
+        
+        deleted_media = []
+        deleted_other = []
+        
+        for item in items:
+            # Since the file is deleted, we check the extension to determine type
+            _, ext = config._get_extension(item)
+            if ext and ext in config.ALL_MEDIA_EXTENSIONS:
+                deleted_media.append(item)
+            else:
+                # It might be a folder (no ext) or a non-media file
+                # We assume folders are not media unless they have media extensions (unlikely)
+                deleted_other.append(item)
+                
+        if deleted_media:
+            logger.info(f"  -> Deleted {len(deleted_media)} media file(s)")
+            for item in deleted_media:
+                ftype = config.get_file_type(item)
+                logger.info(f"  - DELETED {ftype}: {os.path.basename(item)}")
+        
+        if deleted_other:
+            other_names = [os.path.basename(item) for item in deleted_other]
+            logger.info(f"  -> Deleted {len(deleted_other)} other item(s): {', '.join(other_names)}")
 
     def show_batch_notification(self, media_items):
         """Placeholder for GUI or external notifications"""
@@ -122,7 +199,25 @@ class FolderMonitorHandler(FileSystemEventHandler):
                 }
 
     def on_deleted(self, event):
-        pass
+        """Capture deletion events into the pending batch"""
+        parent_path = self._get_parent_dir(event.src_path)
+        now = time.time()
+
+        with self.lock:
+            # Prevent duplicate processing of the same debounce window
+            batch_key = f"{parent_path}_{int(now // config.CHECK_INTERVAL)}"
+            if batch_key in self._processed_batches:
+                return
+
+            if parent_path in self.pending_batches:
+                if event.src_path not in self.pending_batches[parent_path]['items']:
+                    self.pending_batches[parent_path]['items'].append(event.src_path)
+                self.pending_batches[parent_path]['timestamp'] = now
+            else:
+                self.pending_batches[parent_path] = {
+                    'timestamp': now,
+                    'items': [event.src_path]
+                }
 
 
 class BatchProcessor:
