@@ -5,6 +5,8 @@
 ~~make report only after BATCH of files are detected~~
 
 check source file count vs watch folder file count - if different, report error
+
+buttons: watch. source. exit.
  
 
 CREEP:

@@ -1,36 +1,32 @@
-# Last remaining item: check source file count vs watch folder file count - if different, report error
-"""
-Main entry point for Folder Monitor.
-"""
-
+# main.py
 import os
 import sys
 import time
 import logging
 import threading
-from logging.handlers import RotatingFileHandler
+import tkinter as tk
+from tkinter import messagebox
 
-# Add the script directory to path to ensure imports work regardless of CWD
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
+# Add the script directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from src.config import config
 from src.handler import FolderMonitorHandler, BatchProcessor
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+# Import the new GUI module
+from src.gui import FolderMonitorGUI
 
+# Note: We will remove the old file/console handlers in start_media_monitor 
+# if we want the GUI to be the *only* output, or keep them for dual logging.
+# For now, let's keep dual logging but ensure the GUI handles the stream.
 
-def setup_logging():
-    """Configure logging with rotation."""
+def start_media_monitor():
+    """Initialize and start the folder monitor system."""
+    
+    # 1. Setup Basic Logging (File/Console)
     # Create handlers
-    file_handler = RotatingFileHandler(
-        filename=config.LOG_FILE,
-        maxBytes=config.LOG_MAX_BYTES,
-        backupCount=config.LOG_BACKUP_COUNT
-    )
-    console_handler = logging.StreamHandler()
-
+    file_handler = logging.FileHandler(config.LOG_FILE)
+    console_handler = logging.StreamHandler(sys.stdout) # Use sys.stdout for better control if needed
+    
     # Set format
     formatter = logging.Formatter(config.LOG_FORMAT)
     file_handler.setFormatter(formatter)
@@ -41,54 +37,52 @@ def setup_logging():
     logger.setLevel(logging.INFO)
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-
-    return logger
-
-
-def monitor_folder(folder_path: str, handler: FolderMonitorHandler):
-    """Start monitoring a specific folder."""
-    if not os.path.exists(folder_path):
-        logging.error(f"Folder does not exist: {folder_path}")
-        return
-
-    logging.info(f"Starting to monitor folder: {folder_path}")
-
-    observer = Observer()
-    observer.schedule(handler, folder_path, recursive=True)
-    observer.start()
-
-    return observer
-
-
-def start_media_monitor():
-    """Initialize and start the folder monitor system."""
-    logger = setup_logging()
     
-    # Create handler and processor
+    # 2. Initialize GUI
+    root = tk.Tk()
+    gui = FolderMonitorGUI(root)
+    
+    # Start the GUI window in a separate thread? 
+    # No, Tkinter mainloop should be in the main thread usually, 
+    # but we need to start the watcher in a background thread so the GUI stays responsive.
+    
+    # 3. Setup Monitor Logic
     event_handler = FolderMonitorHandler()
     processor = BatchProcessor(event_handler)
     
     # Start the batch processor thread
     processor_thread = threading.Thread(target=processor.run, daemon=True)
     processor_thread.start()
-    logging.info("Batch processor thread started.")
-
+    
     observers = []
     for folder in config.watched_folders:
-        obs = monitor_folder(folder, event_handler)
+        # Check if folder exists
+        if not os.path.exists(folder):
+            logger.warning(f"Watched folder does not exist: {folder}. Please set it via the GUI later.")
+            continue
+            
+        from watchdog.observers import Observer
+        from watchdog.events import FileSystemEventHandler
+        
+        # We use event_handler from handler.py
+        obs = Observer()
+        obs.schedule(event_handler, folder, recursive=True)
+        obs.start()
         observers.append(obs)
+        logger.info(f"Starting to monitor folder: {folder}")
 
+    logger.info("Folder monitor is running. Press Ctrl+C to stop.")
+
+    # 4. Run GUI
     try:
-        logging.info("Folder monitor is running. Press Ctrl+C to stop.")
-        while True:
-            time.sleep(1)
+        root.mainloop()
     except KeyboardInterrupt:
-        logging.info("Stopping folder monitor...")
+        logger.info("Stopping folder monitor...")
+    finally:
         for obs in observers:
             obs.stop()
             obs.join()
-        logging.info("Folder monitor stopped.")
-
+        logging.shutdown()
 
 if __name__ == "__main__":
     start_media_monitor()
