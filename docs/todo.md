@@ -6,7 +6,15 @@
 
 check source file count vs watch folder file count - if different, report error
 
-buttons: watch. source. exit.
+buttons: 
+watch [DONE] - make path report outside the button?
+source [DONE] - make path report outside the button?
+source needs to be able to select folder
+Stack these buttons on top of each other on left
+start transfer button. 
+
+
+get rid of double intro lines at launch
  
 
 CREEP:

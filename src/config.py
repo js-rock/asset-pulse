@@ -2,10 +2,37 @@
 Configuration module for Folder Monitor.
 Holds all settings, extensions, and debounce rules.
 """
-
+import json
+import os
 from dataclasses import dataclass, field
 from typing import Set
 
+CONFIG_FILE = "config.json"
+
+def load_config():
+    # Loads the saved config or returns defaults if file doesn't exist.
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return{}
+    return {}
+
+def save_config(data):
+    # Saves config data to file
+    with open (CONFIG_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+# Load initial values (will be empty strings if no config exists yet)
+initial_config = load_config()
+
+# Store the saved paths in variables
+saved_watch_folder = initial_config.get("watch_folder", "")
+saved_source_files = initial_config.get("source_files", "")
+
+# List of folders to watch (derived from config)
+watched_folders = [saved_watch_folder] if saved_watch_folder else []
 
 @dataclass
 class WatcherConfig:
@@ -22,7 +49,7 @@ class WatcherConfig:
     
     PHOTO_EXTENSIONS: Set[str] = frozenset({
         '.jpg', '.JPG', '.jpeg', '.png', '.PNG', '.gif', '.bmp', '.tiff', 
-        '.webp', '.raw', '.cr2', '.nef', '.NEF' '.orf', '.sr2'
+        '.webp', '.raw', '.cr2', '.nef', '.NEF', '.orf', '.sr2'
     })
     
     # Extensions to ignore entirely (even if they exist in folders)
