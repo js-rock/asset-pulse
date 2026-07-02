@@ -29,7 +29,7 @@ class FolderMonitorGUI:
             text="Set Watch Folder", 
             command=self.on_set_watch
         )
-        self.btn_watch.pack(side=tk.LEFT, padx=5)
+        self.btn_watch.pack(side=tk.TOP, padx=5, anchor=tk.W)
         
         # Source Files Button
         self.btn_source = ttk.Button(
@@ -37,7 +37,7 @@ class FolderMonitorGUI:
             text="Set Source Files", 
             command=self.on_set_source
         )
-        self.btn_source.pack(side=tk.LEFT, padx=5)
+        self.btn_source.pack(side=tk.TOP, padx=5, anchor=tk.W)
 
         # 3. Log Text Area
         self.log_frame = ttk.Frame(self.main_frame)
