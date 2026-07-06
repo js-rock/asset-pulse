@@ -9,7 +9,7 @@ class FolderMonitorGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("AssetPulse Monitor")
-        self.root.geometry("600x400")
+        self.root.geometry("900x400")
 
         # Variables to hold UI state
         self.watch_folder_path = tk.StringVar(value=saved_watch_folder)
@@ -62,6 +62,8 @@ class FolderMonitorGUI:
         """Custom logging handler that pushes messages to the Tkinter Text widget."""
         self.logger = logging.getLogger("AssetPulse")
         self.logger.setLevel(logging.INFO)
+
+        self.logger.propagate = False
         
         # File Handler
         log_dir = "logs"

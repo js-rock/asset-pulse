@@ -1,3 +1,5 @@
+# MAJOR TODO - Change hardcoded watch folder be dynamically set by user.
+
 import os
 import sys
 import time
@@ -6,9 +8,10 @@ import threading
 import tkinter as tk
 from tkinter import messagebox
 
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.config import config, watched_folders, load_config
+from src.config import config, load_config
 from src.handler import FolderMonitorHandler, BatchProcessor
 from src.gui import FolderMonitorGUI
 

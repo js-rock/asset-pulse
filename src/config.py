@@ -16,30 +16,25 @@ def load_config():
             with open(CONFIG_FILE, "r") as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            return{}
+            return {}
     return {}
 
 def save_config(data):
     # Saves config data to file
-    with open (CONFIG_FILE, "w") as f:
+    with open(CONFIG_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-# Load initial values (will be empty strings if no config exists yet)
+# 1. LOAD THE DATA AT THE TOP LEVEL
 initial_config = load_config()
-
-# Store the saved paths in variables
 saved_watch_folder = initial_config.get("watch_folder", "")
 saved_source_files = initial_config.get("source_files", "")
-
-# List of folders to watch (derived from config)
-watched_folders = [saved_watch_folder] if saved_watch_folder else []
 
 @dataclass
 class WatcherConfig:
     """Centralized configuration for the folder monitor."""
     
-    # Directories to watch
-    watched_folders: list[str] = field(default_factory=lambda: ['F:/_DummyNAS/test_watch'])
+    # 2. KEEP ONLY THE FIELDS AND CONSTANTS INSIDE THE CLASS DEFINITION
+    watched_folders: list[str] = field(default_factory=list)
     
     # File extensions (now lowercase for case-insensitive matching)
     VIDEO_EXTENSIONS: Set[str] = frozenset({
@@ -54,7 +49,7 @@ class WatcherConfig:
     
     # Extensions to ignore entirely (even if they exist in folders)
     IGNORED_EXTENSIONS: Set[str] = frozenset({
-        '.tmp', '.log', '.part', '.json'#, '.xml', '.nfo' # Example ignores
+        '.tmp', '.log', '.part', '.json' #, '.xml', '.nfo' # Example ignores
     })
 
     # Debounce settings
@@ -98,5 +93,9 @@ class WatcherConfig:
         name, ext = os.path.splitext(file_path)
         return name, ext
 
-# Singleton instance for easy access throughout the app
-config = WatcherConfig()
+
+# 3. INITIALIZE YOUR SINGLETON OBJECT DOWN HERE (OUTSIDE THE CLASS)
+# This replaces the broken code block and assigns the initial path seamlessly
+config = WatcherConfig(
+    watched_folders=[saved_watch_folder] if saved_watch_folder else []
+)

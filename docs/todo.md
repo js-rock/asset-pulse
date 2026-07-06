@@ -1,23 +1,24 @@
-~~create base folder scanning via watchdog~~
+[Done] create base folder scanning via watchdog
 
-~~pop up report for file detection - sort of done, needs context~~
+[Done] pop up report for file detection
 
-~~make report only after BATCH of files are detected~~
+[Done] make report only after BATCH of files are detected
 
 check source file count vs watch folder file count - if different, report error
 
 buttons: 
-watch [DONE] - make path report outside the button?
-source [DONE] - make path report outside the button?
-source [DONE] needs to be able to select folder
+watch [] - make path report outside the button?
+source [] - make path report outside the button?
+source [] needs to be able to select folder / only?
 [DONE] Stack these buttons on top of each other on left
+
 start transfer button? 
 
 
-get rid of double intro lines at launch
+[DONE] get rid of double intro lines at launch
  
 
 CREEP:
-change watch folder file path to user input OR option to drag drop (tkinter or something else?)
+[Almost Done - hard coded works] change watch folder file path to user input OR option to drag drop (tkinter or something else?)
 Security! (once advanced features are added)
 Notifier using telegram of discord
