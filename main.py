@@ -1,5 +1,3 @@
-# MAJOR TODO - Change hardcoded watch folder be dynamically set by user.
-
 import os
 import sys
 import time

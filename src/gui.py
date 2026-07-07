@@ -116,17 +116,28 @@ class FolderMonitorGUI:
         )
         
         if folder_path:
-            # 1. Save the path in the Variable
-            self.watch_folder_path.set(folder_path)
+            current_watch = self.watch_folder_path.get()
             
-            # 2. Update the UI text for the button
-            self.update_button_labels()
-            
-            # 3. Save to persistent config file
-            save_config({"watch_folder": folder_path, "source_files": self.source_files_path.get()})
-            
-            # 4. Log the action
-            self.append_log(f"Watch Folder Set and Saved: {folder_path}")
+            # Check if the folder actually changed
+            if current_watch != folder_path:
+                # 1. Update UI state
+                self.watch_folder_path.set(folder_path)
+                self.update_button_labels()
+                
+                # 2. Save to config
+                save_config({"watch_folder": folder_path, "source_files": self.source_files_path.get()})
+                
+                # 3. Log the change
+                self.append_log(f"Watch Folder Changed: {folder_path}")
+                self.append_log("Relaunching application...")
+                
+                # 4. Force Relaunch
+                # This kills the current process and starts a new one with the same arguments
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+            else:
+                # Folder is the same, just save
+                save_config({"watch_folder": folder_path, "source_files": self.source_files_path.get()})
+                self.append_log(f"Watch Folder Set: {folder_path}")
         else:
             self.append_log("Watch Folder selection cancelled.")
 

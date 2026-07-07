@@ -70,7 +70,6 @@ class FolderMonitorHandler(FileSystemEventHandler):
         non_media_count = len(non_media_items)
 
         # Only show the "Batch Detected" header if we have MORE than 1 item
-        # This makes single file/folder drops much cleaner in the logs.
         if len(items) > 1:
             # Determine the primary type of this batch to customize the log header
             if media_count > 0 and folder_count == 0 and non_media_count == 0:
@@ -86,11 +85,13 @@ class FolderMonitorHandler(FileSystemEventHandler):
 
         # Report Media Files if any
         if media_count > 0:
-            logger.info(f"  -> Found {media_count} new media file(s) in batch")
+            # Optional: Add a count summary for media
+            logger.info(f"  -> Found {media_count} new media file(s)")
             for item in media_items:
                 try:
                     size = os.path.getsize(item)
                     ftype = config.get_file_type(item)
+                    # Format: - TYPE: filename (size)
                     logger.info(f"  - NEW {ftype}: {os.path.basename(item)} ({size} bytes)")
                 except OSError:
                     logger.warning(f"  - Could not read size: {os.path.basename(item)}")
@@ -98,33 +99,18 @@ class FolderMonitorHandler(FileSystemEventHandler):
         # Report Folders
         if folder_count > 0:
             logger.info(f"  -> Found {folder_count} new subfolder(s)")
+            for item in folders:
+                logger.info(f"  - NEW FOLDER: {os.path.basename(item)}")
 
-        # --- REPORT NON-MEDIA FILES (IMPROVED FORMATTING) ---
+        # --- REPORT NON-MEDIA FILES (ONE PER LINE) ---
         if non_media_count > 0:
-            # Group by extension
-            from collections import defaultdict
-            non_media_by_ext = defaultdict(list)
-            for f in non_media_items:
-                _, ext = config._get_extension(f)
-                non_media_by_ext[ext].append(os.path.basename(f))
-
-            # Report each extension group
-            for ext, filenames in non_media_by_ext.items():
-                # Sort items for consistency
-                filenames.sort()
-
-                # If there are many files, break them into chunk of 5 per line
-                chunk_size = 5
-                for i in range(0, len(filenames), chunk_size):
-                    chunk = filenames[i:i+chunk_size]
-                    if len(chunk) == 1:
-                        logger.info(f"  - {len(non_media_by_ext[ext])}x {ext}: {chunk[0]}")
-                    else:
-                        # Join the chunk names
-                        logger.info(f"  - {len(non_media_by_ext[ext])}x {ext}: {', '.join(chunk)}{'...' if len(chunk) == chunk_size and i+chunk_size < len(filenames) else ''}")        
-                # If the total count is huge, give a summary instead of listing it all
-                # if len(non_media_by_ext[ext]) > 20:
-                #     logger.info(f"    -> ... and {len(non_media_by_ext[ext]) - 20} more {ext} files")
+            # We just iterate through every single non-media item
+            for item in non_media_items:
+                basename = os.path.basename(item)
+                _, ext = config._get_extension(item)
+                # Format: - EXTENSION: filename
+                # This makes it easy to read and search
+                logger.info(f"  - NEW {ext}: {basename}")
 
         # Trigger notification if there are media files
         if media_count > 0:
@@ -135,27 +121,38 @@ class FolderMonitorHandler(FileSystemEventHandler):
         logger.info(f"Folder Deletions Detected: {parent_path}")
         
         deleted_media = []
-        deleted_other = []
+        deleted_non_media = []
         
         for item in items:
             # Since the file is deleted, we check the extension to determine type
             _, ext = config._get_extension(item)
+            
+            # Check if it looks like a media file based on extension
             if ext and ext in config.ALL_MEDIA_EXTENSIONS:
                 deleted_media.append(item)
             else:
-                # It might be a folder (no ext) or a non-media file
-                # We assume folders are not media unless they have media extensions (unlikely)
-                deleted_other.append(item)
-                
+                # Add to non-media list. 
+                # Note: We don't filter by IGNORED_EXTENSIONS here because if it was deleted,
+                # we usually want to know what was removed, even if it's a config file.
+                # However, if you want to hide junk deletions, uncomment the line below:
+                # if ext and ext in config.IGNORED_EXTENSIONS: continue
+                deleted_non_media.append(item)
+        
+        # --- REPORT DELETED MEDIA (One per line with type) ---
         if deleted_media:
             logger.info(f"  -> Deleted {len(deleted_media)} media file(s)")
             for item in deleted_media:
                 ftype = config.get_file_type(item)
                 logger.info(f"  - DELETED {ftype}: {os.path.basename(item)}")
         
-        if deleted_other:
-            other_names = [os.path.basename(item) for item in deleted_other]
-            logger.info(f"  -> Deleted {len(deleted_other)} other item(s): {', '.join(other_names)}")
+        # --- REPORT DELETED NON-MEDIA (One per line) ---
+        if deleted_non_media:
+            # Now we iterate individually instead of grouping
+            logger.info(f"  -> Deleted {len(deleted_non_media)} other file(s)")
+            for item in deleted_non_media:
+                _, ext = config._get_extension(item)
+                # Format: - DELETED [EXT]: filename
+                logger.info(f"  - DELETED {ext}: {os.path.basename(item)}")
 
     def show_batch_notification(self, media_items):
         """Placeholder for GUI or external notifications"""
