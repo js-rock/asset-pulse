@@ -13,7 +13,7 @@ source [] needs to be able to select folder / only?
 [DONE] Stack these buttons on top of each other on left
 [DONE] force app reboot on watch folder selection
 
-start transfer button? 
+[Current placeholder] start transfer button
 
 
 [DONE] get rid of double intro lines at launch

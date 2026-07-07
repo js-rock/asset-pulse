@@ -15,35 +15,55 @@ class FolderMonitorGUI:
         self.watch_folder_path = tk.StringVar(value=saved_watch_folder)
         self.source_files_path = tk.StringVar(value=saved_source_files)
 
-        # 1. Main Frame
+        # 1. Main Frame to hold Sidebar and Log
         self.main_frame = ttk.Frame(root, padding="10")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 2. Button Area with Path Display
-        self.button_frame = ttk.Frame(self.main_frame)
-        self.button_frame.pack(fill=tk.X, pady=10)
+        # --- LEFT COLUMN: Controls ---
+        self.left_frame = ttk.Frame(self.main_frame)
+        self.left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=5, pady=5)
+
+        # Label for context (optional but helpful)
+        ttk.Label(self.left_frame, text="Configuration & Actions").pack(anchor=tk.CENTER, pady=(0, 10))
 
         # Watch Folder Button
         self.btn_watch = ttk.Button(
-            self.button_frame, 
+            self.left_frame, 
             text="Set Watch Folder", 
             command=self.on_set_watch
         )
-        self.btn_watch.pack(side=tk.TOP, padx=5, anchor=tk.W)
-        
-        # Source Files Button
+        self.btn_watch.pack(fill=tk.X, pady=2)
+
+        # Source Files Button (Directly below Watch)
         self.btn_source = ttk.Button(
-            self.button_frame, 
-            text="Set Source Files", 
+            self.left_frame, 
+            text="Set Source Folder", 
             command=self.on_set_source
         )
-        self.btn_source.pack(side=tk.TOP, padx=5, anchor=tk.W)
+        self.btn_source.pack(fill=tk.X, pady=2)
 
-        # 3. Log Text Area
-        self.log_frame = ttk.Frame(self.main_frame)
-        self.log_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        # Start Transfer Button (Directly below Source)
+        self.btn_transfer = ttk.Button(
+            self.left_frame,
+            text="Start Transfer",
+            command=self.on_start_transfer
+        )
+        self.btn_transfer.pack(fill=tk.X, pady=10) # Extra padding below to separate from logs
         
-        self.log_text = tk.Text(self.log_frame, state=tk.DISABLED, bg="#f0f0f0")
+        # Make the Transfer button look distinct (optional)
+        self.btn_transfer['style'] = 'Accent.TButton' if hasattr(ttk, 'Style') else ''
+
+        # --- RIGHT COLUMN: Log Output ---
+        self.right_frame = ttk.Frame(self.main_frame)
+        self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        # Log Header
+        ttk.Label(self.right_frame, text="Activity Log").pack(anchor=tk.W, pady=(0, 5))
+
+        self.log_frame = ttk.Frame(self.right_frame)
+        self.log_frame.pack(fill=tk.BOTH, expand=True)
+        
+        self.log_text = tk.Text(self.log_frame, state=tk.DISABLED, bg="#f0f0f0", font=("Consolas", 9))
         self.log_text.pack(fill=tk.BOTH, expand=True)
 
         # Initialize Logging Handler
@@ -132,7 +152,6 @@ class FolderMonitorGUI:
                 self.append_log("Relaunching application...")
                 
                 # 4. Force Relaunch
-                # This kills the current process and starts a new one with the same arguments
                 os.execv(sys.executable, [sys.executable] + sys.argv)
             else:
                 # Folder is the same, just save
@@ -142,41 +161,45 @@ class FolderMonitorGUI:
             self.append_log("Watch Folder selection cancelled.")
 
     def on_set_source(self):
-        """Opens a file selection dialog for Source Files."""
-        file_paths = filedialog.askopenfilenames(
-            title="Select Source Files",
-            filetypes=[
-                ("All Files", "*.*"),
-                ("Media Files", "*.jpg *.png *.mp4 *.mov *.mp3 *.wav")
-            ]
+        """Opens a folder selection dialog for Source Files folder."""
+        folder_path = filedialog.askdirectory(
+            title="Select Source Folder",
+            initialdir=os.path.expanduser("~")
         )
         
-        if file_paths:
-            # 1. Save the path (join tuple into string)
-            self.source_files_path.set("; ".join(file_paths))
+        if folder_path:
+            # 1. Save the path
+            self.source_files_path.set(folder_path)
             
-            # 2. Update the UI text for the button
+            # 2. Update the UI text
             self.update_button_labels()
             
-            # 3. Save to persistent config file
-            save_config({"watch_folder": self.watch_folder_path.get(), "source_files": "; ".join(file_paths)})
+            # 3. Save to persistent config
+            save_config({"watch_folder": self.watch_folder_path.get(), "source_files": folder_path})
             
-            # 4. Log the action
-            self.append_log(f"Source Files Set and Saved: {len(file_paths)} file(s)")
+            # 4. Log
+            self.append_log(f"Source Folder Set: {folder_path}")
         else:
-            self.append_log("Source Files selection cancelled.")
+            self.append_log("Source Folder selection cancelled.")
 
     def update_button_labels(self):
         """Helper to update button text to show current selection or 'Not Set'."""
         watch_val = self.watch_folder_path.get()
         if watch_val:
-            # Show full path in button text for clarity
-            self.btn_watch.config(text=f"Watch: {watch_val}")
+            # Truncate long paths for display
+            display_watch = watch_val if len(watch_val) < 25 else ".../" + watch_val.split("/")[-1]
+            self.btn_watch.config(text=f"Watched: {display_watch}")
         else:
             self.btn_watch.config(text="Set Watch Folder")
         
         source_val = self.source_files_path.get()
         if source_val:
-            self.btn_source.config(text=f"Source: {source_val}")
+            # Truncate long paths for display
+            display_source = source_val if len(source_val) < 25 else ".../" + source_val.split("/")[-1]
+            self.btn_source.config(text=f"Source: {display_source}")
         else:
-            self.btn_source.config(text="Set Source Files")
+            self.btn_source.config(text="Set Source Folder")
+
+    def on_start_transfer(self):
+        # Placeholder for transfer logic 
+        self.append_log("Transfer Button Clicked. Logic to be implemented")
