@@ -61,8 +61,8 @@ class FolderMonitorHandler(FileSystemEventHandler):
             if not os.path.isdir(i):
                 _, ext = config._get_extension(i)
                 # Only include if it HAS an extension, is NOT ignored, and is NOT media
-                if ext and ext not in config.IGNORED_EXTENSIONS and ext not in config.ALL_MEDIA_EXTENSIONS:
-                    non_media_items.append(i)
+                # if ext and ext not in config.IGNORED_EXTENSIONS and ext not in config.ALL_MEDIA_EXTENSIONS:
+                #     non_media_items.append(i)
 
         file_count = len(items) - len(folders)
         folder_count = len(folders)

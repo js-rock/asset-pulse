@@ -1,6 +1,7 @@
 # NOTES:
 # in gui.py, Source + transfers buttons commented out for future uses cases. Re-enable them when needed.
 # in config.py, ignored extensions have been commented out for future uses cases. Re-enable them when needed.
+# - lines 64 & 65 in handler.py is connected to the ignored extensions and also needed to be commented out.
 
 # Add a 'reveal log' and delete button?
 
