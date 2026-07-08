@@ -4,12 +4,13 @@ import logging
 import tkinter as tk
 from tkinter import ttk, filedialog
 from src.config import save_config, saved_watch_folder, saved_source_files
+from src.os_utils import open_watched_folder
 
 class FolderMonitorGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("AssetPulse Monitor")
-        self.root.geometry("900x400")
+        self.root.geometry("1000x400")
 
         # Variables to hold UI state
         self.watch_folder_path = tk.StringVar(value=saved_watch_folder)
@@ -34,24 +35,33 @@ class FolderMonitorGUI:
         )
         self.btn_watch.pack(fill=tk.X, pady=2)
 
-        # Source Files Button (Directly below Watch)
-        self.btn_source = ttk.Button(
+        # Reveal Watch Folder Button
+        self.btn_reveal = ttk.Button(
             self.left_frame, 
-            text="Set Source Folder", 
-            command=self.on_set_source
+            text="Reveal Watch Folder", 
+            command=self.on_reveal_watch,
+            state=tk.DISABLED # Start disabled until a folder in set
         )
-        self.btn_source.pack(fill=tk.X, pady=2)
+        self.btn_reveal.pack(fill=tk.X, pady=2)
 
-        # Start Transfer Button (Directly below Source)
-        self.btn_transfer = ttk.Button(
-            self.left_frame,
-            text="Start Transfer",
-            command=self.on_start_transfer
-        )
-        self.btn_transfer.pack(fill=tk.X, pady=10) # Extra padding below to separate from logs
+        # # Source Files Button (Directly below Watch)
+        # self.btn_source = ttk.Button(
+        #     self.left_frame, 
+        #     text="Set Source Folder", 
+        #     command=self.on_set_source
+        # )
+        # self.btn_source.pack(fill=tk.X, pady=2)
+
+        # # Start Transfer Button (Directly below Source)
+        # self.btn_transfer = ttk.Button(
+        #     self.left_frame,
+        #     text="Start Transfer",
+        #     command=self.on_start_transfer
+        # )
+        # self.btn_transfer.pack(fill=tk.X, pady=10) # Extra padding below to separate from logs
         
-        # Make the Transfer button look distinct (optional)
-        self.btn_transfer['style'] = 'Accent.TButton' if hasattr(ttk, 'Style') else ''
+        # # Make the Transfer button look distinct (optional)
+        # self.btn_transfer['style'] = 'Accent.TButton' if hasattr(ttk, 'Style') else ''
 
         # --- RIGHT COLUMN: Log Output ---
         self.right_frame = ttk.Frame(self.main_frame)
@@ -73,6 +83,7 @@ class FolderMonitorGUI:
         current_watch = self.watch_folder_path.get()
         if current_watch:
             self.append_log(f"Restored previous session. Watch Folder: {current_watch}")
+            self.btn_reveal.config(state=tk.NORMAL) # Enable reveal_watched_folder if path exists
         else:
             self.append_log("GUI Initialized. Please select a watch folder.")
 
@@ -157,8 +168,21 @@ class FolderMonitorGUI:
                 # Folder is the same, just save
                 save_config({"watch_folder": folder_path, "source_files": self.source_files_path.get()})
                 self.append_log(f"Watch Folder Set: {folder_path}")
+                self.btn_reveal.config(state=tk.NORMAL) # Enable reveal_watched_folder
         else:
             self.append_log("Watch Folder selection cancelled.")
+
+    def on_reveal_watch(self):
+        """Opens the currently set Watch Folder in the system file explorer."""
+        folder_path = self.watch_folder_path.get()
+        if not folder_path:
+            return
+        
+        try:
+            open_watched_folder(folder_path)
+            self.append_log(f"Revealed watched folder in Explorer: {folder_path}")
+        except Exception as e:
+            self.append_log(f"Error revealing the watched folder: {e}")
 
     def on_set_source(self):
         """Opens a folder selection dialog for Source Files folder."""
@@ -189,16 +213,18 @@ class FolderMonitorGUI:
             # Truncate long paths for display
             display_watch = watch_val if len(watch_val) < 25 else ".../" + watch_val.split("/")[-1]
             self.btn_watch.config(text=f"Watched: {display_watch}")
+            self.btn_reveal.config(state=tk.NORMAL) # Enable reveal watched folder
         else:
             self.btn_watch.config(text="Set Watch Folder")
+            self.btn_reveal.config(state=tk.DISABLED) # Disable if no path
         
-        source_val = self.source_files_path.get()
-        if source_val:
-            # Truncate long paths for display
-            display_source = source_val if len(source_val) < 25 else ".../" + source_val.split("/")[-1]
-            self.btn_source.config(text=f"Source: {display_source}")
-        else:
-            self.btn_source.config(text="Set Source Folder")
+        # source_val = self.source_files_path.get()
+        # if source_val:
+        #     # Truncate long paths for display
+        #     display_source = source_val if len(source_val) < 25 else ".../" + source_val.split("/")[-1]
+        #     self.btn_source.config(text=f"Source: {display_source}")
+        # else:
+        #     self.btn_source.config(text="Set Source Folder")
 
     def on_start_transfer(self):
         # Placeholder for transfer logic 

@@ -829,3 +829,53 @@
 2026-07-07 14:22:28,204 - INFO - Folder Deletions Detected: D:\zzNew_Watch_Folder
 2026-07-07 14:22:28,206 - INFO -   -> Deleted 1 other file(s)
 2026-07-07 14:22:28,209 - INFO -   - DELETED : __From DJI NEO to backup
+2026-07-08 13:17:08,802 - INFO - Restored previous session. Watch Folder: D:/zzNew_Watch_Folder
+2026-07-08 13:18:18,148 - INFO - Restored previous session. Watch Folder: D:/zzNew_Watch_Folder
+2026-07-08 13:18:18,168 - INFO - Starting to monitor folder: D:/zzNew_Watch_Folder
+2026-07-08 13:19:49,600 - INFO - Restored previous session. Watch Folder: D:/zzNew_Watch_Folder
+2026-07-08 13:19:49,611 - INFO - Starting to monitor folder: D:/zzNew_Watch_Folder
+2026-07-08 13:19:57,489 - INFO - Watch Folder selection cancelled.
+2026-07-08 13:20:09,692 - INFO - Watch Folder Changed: F:/_DummyNAS/input_folder
+2026-07-08 13:20:09,692 - INFO - Relaunching application...
+2026-07-08 13:20:09,820 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/input_folder
+2026-07-08 13:20:09,830 - INFO - Starting to monitor folder: F:/_DummyNAS/input_folder
+2026-07-08 13:43:09,922 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/input_folder
+2026-07-08 13:43:13,292 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/input_folder
+2026-07-08 13:43:31,768 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/input_folder
+2026-07-08 13:43:46,854 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/input_folder
+2026-07-08 13:43:46,864 - INFO - Starting to monitor folder: F:/_DummyNAS/input_folder
+2026-07-08 13:43:49,777 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:54,323 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:55,502 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:56,274 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:56,469 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:56,656 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:56,821 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:57,001 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:57,181 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:57,354 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:57,549 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:57,736 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:43:57,931 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:46:49,622 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/input_folder
+2026-07-08 13:46:49,633 - INFO - Starting to monitor folder: F:/_DummyNAS/input_folder
+2026-07-08 13:46:50,806 - INFO - Error revealing the watched folder: open_watched_folder() missing 1 required positional argument: 'path'
+2026-07-08 13:47:50,431 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/input_folder
+2026-07-08 13:47:50,441 - INFO - Starting to monitor folder: F:/_DummyNAS/input_folder
+2026-07-08 13:47:51,983 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/input_folder
+2026-07-08 13:48:15,161 - INFO - Watch Folder Changed: F:/_DummyNAS/test_watch
+2026-07-08 13:48:15,161 - INFO - Relaunching application...
+2026-07-08 13:48:15,292 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/test_watch
+2026-07-08 13:48:15,302 - INFO - Starting to monitor folder: F:/_DummyNAS/test_watch
+2026-07-08 13:48:17,257 - INFO - Revealed watched folder in Explorer: F:/_DummyNAS/test_watch
+2026-07-08 13:48:39,803 - INFO - Folder Deletions Detected: F:\_DummyNAS\test_watch
+2026-07-08 13:48:39,803 - INFO -   -> Deleted 2 media file(s)
+2026-07-08 13:48:39,804 - INFO -   - DELETED VIDEO: DJI_20260224141047_0001_D.MP4
+2026-07-08 13:48:39,804 - INFO -   - DELETED VIDEO: DJI_20260224141102_0002_D.MP4
+2026-07-08 13:48:39,804 - INFO -   -> Deleted 2 other file(s)
+2026-07-08 13:48:39,804 - INFO -   - DELETED .SRT: DJI_20260224141047_0001_D.SRT
+2026-07-08 13:48:39,804 - INFO -   - DELETED .SRT: DJI_20260224141102_0002_D.SRT
+2026-07-08 14:04:40,883 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/test_watch
+2026-07-08 14:04:40,893 - INFO - Starting to monitor folder: F:/_DummyNAS/test_watch
+2026-07-08 14:05:09,328 - INFO - Restored previous session. Watch Folder: F:/_DummyNAS/test_watch
+2026-07-08 14:05:09,338 - INFO - Starting to monitor folder: F:/_DummyNAS/test_watch

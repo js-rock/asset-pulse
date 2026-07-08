@@ -1,3 +1,9 @@
+# NOTES:
+# in gui.py, Source + transfers buttons commented out for future uses cases. Re-enable them when needed.
+# in config.py, ignored extensions have been commented out for future uses cases. Re-enable them when needed.
+
+# Add a 'reveal log' and delete button?
+
 import os
 import sys
 import time
