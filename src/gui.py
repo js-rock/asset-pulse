@@ -229,3 +229,13 @@ class FolderMonitorGUI:
     def on_start_transfer(self):
         # Placeholder for transfer logic 
         self.append_log("Transfer Button Clicked. Logic to be implemented")
+
+    def flash_log(self):
+        """Thread-safe way to trigger the log flash."""
+        # .after(0, ...) puts this function into the GUI event queue immediately
+        self.root.after(0, self._perform_flash)
+
+    def _perform_flash(self):
+        """The actual UI update code (must run on main thread)."""
+        self.log_text.config(bg="#e0f7fa")
+        self.root.after(1000, lambda: self.log_text.config(bg="white"))  

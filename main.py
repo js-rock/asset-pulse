@@ -3,7 +3,6 @@
 # in config.py, ignored extensions have been commented out for future uses cases. Re-enable them when needed.
 # - lines 64 & 65 in handler.py is connected to the ignored extensions and also needed to be commented out.
 
-# Add a 'reveal log' and delete button?
 
 import os
 import sys
@@ -38,6 +37,7 @@ def start_media_monitor():
     
     # 3. Setup Monitor Logic
     event_handler = FolderMonitorHandler()
+    event_handler.gui = gui
     global_processor = BatchProcessor(event_handler)
     
     # Start the batch processor thread

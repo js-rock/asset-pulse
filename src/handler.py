@@ -158,11 +158,26 @@ class FolderMonitorHandler(FileSystemEventHandler):
         """Placeholder for GUI or external notifications"""
         pass
 
+    def _trigger_ui_activity(self, parent_path):
+        """Helper to handle UI feedback exactly once per batch."""
+        if hasattr(self, 'gui') and self.gui:
+            # 1. ALWAYS pulse the UI for every file event
+            self.gui.flash_log()
+            
+            # 2. ONLY log if this is a new batch
+            # We check the pending_batches dictionary to see if we've already started this batch
+            if parent_path not in self.pending_batches:
+                self.gui.append_log("Activity detected. Debouncing...")
+
     def on_created(self, event):
         abs_parent = self._get_parent_dir(event.src_path)
+        self._trigger_ui_activity(abs_parent)
+
         now = time.time()
 
         with self.lock:
+            is_new_batch = abs_parent not in self.pending_batches
+
             batch_key = f"{abs_parent}_{int(now // config.CHECK_INTERVAL)}"
             if batch_key in self._processed_batches:
                 return
@@ -182,6 +197,8 @@ class FolderMonitorHandler(FileSystemEventHandler):
 
     def on_moved(self, event):
         dest_parent = self._get_parent_dir(event.dest_path)
+        self._trigger_ui_activity(dest_parent)
+        
         now = time.time()
 
         with self.lock:
