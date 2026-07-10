@@ -48,6 +48,7 @@ class FolderMonitorHandler(FileSystemEventHandler):
         if deleted_items:
             self._report_deleted_items(parent_path, deleted_items)
 
+
     def _report_found_items(self, parent_path: str, items: list):
         """Process and report found items with specific batch type headers"""
         
@@ -55,14 +56,16 @@ class FolderMonitorHandler(FileSystemEventHandler):
         media_items = [i for i in items if config.is_media_file(i)]
         folders = [i for i in items if os.path.isdir(i)]
         
-        # Non-media files: Files that exist, are files, have an extension, but are NOT media
+        # --- UPDATED LOGIC: Mirror _report_deleted_items behavior ---
+        # Instead of relying on a potentially missing IGNORED_EXTENSIONS list,
+        # we explicitly classify anything that is NOT a folder and NOT media as non-media.
         non_media_items = []
         for i in items:
-            if not os.path.isdir(i):
+            if os.path.isfile(i):
                 _, ext = config._get_extension(i)
-                # Only include if it HAS an extension, is NOT ignored, and is NOT media
-                # if ext and ext not in config.IGNORED_EXTENSIONS and ext not in config.ALL_MEDIA_EXTENSIONS:
-                #     non_media_items.append(i)
+                if ext and ext not in config.ALL_MEDIA_EXTENSIONS:
+                    non_media_items.append(i)
+        # -----------------------------------------------------------
 
         file_count = len(items) - len(folders)
         folder_count = len(folders)
@@ -104,6 +107,7 @@ class FolderMonitorHandler(FileSystemEventHandler):
 
         # --- REPORT NON-MEDIA FILES (ONE PER LINE) ---
         if non_media_count > 0:
+            logger.info(f"  -> Found {len(non_media_items)} other file(s)")
             # We just iterate through every single non-media item
             for item in non_media_items:
                 basename = os.path.basename(item)
