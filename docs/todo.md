@@ -4,21 +4,17 @@
 
 [Done] make report only after BATCH of files are detected
 
-change on_detect code to show all files, still blocking out .srt
+[DONE] change on_detect code to show all files, still blocking out .srt
 
-Add a 'reveal log' and delete button?
+[DONE] Add a 'reveal log' and delete button?
 
-check source file count vs watch folder file count - if different, report error
+[DONE] check source file count vs watch folder file count
 
 buttons: 
-watch [] - make path report outside the button?
-source [] - make path report outside the button?
-source [] needs to be able to select folder / only?
+[DONE] watch - make path report outside the button?
+[DONE] source - make path report outside the button?
 [DONE] Stack these buttons on top of each other on left
 [DONE] force app reboot on watch folder selection
-
-
-
 
 [DONE] get rid of double intro lines at launch
  
@@ -28,3 +24,4 @@ CREEP:
 Security! (once advanced features are added)
 Notifier using telegram of discord
 [Current placeholder] start transfer button
+source button needs to be able to select folder
