@@ -17,6 +17,10 @@ buttons:
 [DONE] force app reboot on watch folder selection
 
 [DONE] get rid of double intro lines at launch
+
+[DONE] Copy / Ingest with full metadata and duplicates not allowed via folder selection only
+
+MVP [DONE!!!!!!] 
  
 
 CREEP:

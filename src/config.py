@@ -48,11 +48,11 @@ class WatcherConfig:
     })
     
     # # Extensions to ignore entirely (even if they exist in folders)
-    # IGNORED_EXTENSIONS: Set[str] = frozenset({
-    #     ".tmp", ".log", ".part", ".json", ".nfo", ".txt", ".md", ".log", ".json", ".yaml", ".yml", ".xml", ".cfg", ".ini",
+    IGNORED_EXTENSIONS: Set[str] = frozenset({
+        ".tmp", #".log", ".part", ".json", ".nfo", ".txt", ".md", ".log", ".json", ".yaml", ".yml", ".xml", ".cfg", ".ini",
     #     ".env", ".gitignore", ".gitkeep", ".DS_Store", "Thumbs.db",
     # # Add more common junk extensions here if needed  #, '.xml',  # Example ignores
-    # })
+    })
 
     # Debounce settings
     DEBOUNCE_DELAY: float = 10.0  # Seconds

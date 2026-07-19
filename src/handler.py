@@ -8,11 +8,9 @@ import time
 import logging
 from threading import Lock
 from watchdog.events import FileSystemEventHandler
-
-from src.config import config
+from .config import config
 
 logger = logging.getLogger(__name__)
-
 
 class FolderMonitorHandler(FileSystemEventHandler):
     """Handles file system events with debouncing to suppress noise from folder drops"""
@@ -21,6 +19,7 @@ class FolderMonitorHandler(FileSystemEventHandler):
         self.pending_batches = {}
         self.lock = Lock()
         self._processed_batches = set()
+        self._last_flash_time = 0  # Track when we last flashed
 
     def _get_parent_dir(self, path: str) -> str:
         return os.path.abspath(os.path.dirname(path))
@@ -31,8 +30,6 @@ class FolderMonitorHandler(FileSystemEventHandler):
             return
 
         # Separate existing and deleted items
-        # If an item exists, it was likely created or moved there.
-        # If it doesn't exist, it was likely deleted.
         existing_items = [i for i in items if os.path.exists(i)]
         deleted_items = [i for i in items if not os.path.exists(i)]
 
@@ -122,7 +119,7 @@ class FolderMonitorHandler(FileSystemEventHandler):
 
     def _report_deleted_items(self, parent_path: str, items: list):
         """Report items that were deleted"""
-        logger.info(f"Folder Deletions Detected: {parent_path}")
+        logger.info(f"Folder Deletions Detected in Folder: {parent_path}")
         
         deleted_media = []
         deleted_non_media = []
@@ -164,24 +161,41 @@ class FolderMonitorHandler(FileSystemEventHandler):
 
     def _trigger_ui_activity(self, parent_path):
         """Helper to handle UI feedback exactly once per batch."""
-        if hasattr(self, 'gui') and self.gui:
-            # 1. ALWAYS pulse the UI for every file event
+        if not hasattr(self, 'gui') or not self.gui:
+            return
+
+        now = time.time()
+        
+        # Throttle flashing: Only flash if more than 0.5 seconds have passed since the last flash
+        # This prevents the "white-out" glitch when many events arrive at once
+        if now - self._last_flash_time > 0.5:
             self.gui.flash_log()
+            self._last_flash_time = now
             
-            # 2. ONLY log if this is a new batch
-            # We check the pending_batches dictionary to see if we've already started this batch
+            # Only log "Activity detected" if this is the start of a new batch window
             if parent_path not in self.pending_batches:
                 self.gui.append_log("Activity detected. Debouncing...")
 
+    def _should_process(self, path: str) -> bool:
+        """Ignore temp files and ignored extensions."""
+        if not path:
+            return False
+        _, ext = os.path.splitext(path)
+        if '.tmp' in ext or '.part' in ext:
+            return False
+        return True
+
     def on_created(self, event):
+        # Ignore temp files immediately so they don't trigger UI or batches
+        if not self._should_process(event.src_path):
+            return
+
         abs_parent = self._get_parent_dir(event.src_path)
         self._trigger_ui_activity(abs_parent)
 
         now = time.time()
-
+        
         with self.lock:
-            is_new_batch = abs_parent not in self.pending_batches
-
             batch_key = f"{abs_parent}_{int(now // config.CHECK_INTERVAL)}"
             if batch_key in self._processed_batches:
                 return
@@ -218,6 +232,10 @@ class FolderMonitorHandler(FileSystemEventHandler):
 
     def on_deleted(self, event):
         """Capture deletion events into the pending batch"""
+        # ADDED: Ignore temp files immediately
+        if not self._should_process(event.src_path):
+            return
+        
         parent_path = self._get_parent_dir(event.src_path)
         now = time.time()
 
