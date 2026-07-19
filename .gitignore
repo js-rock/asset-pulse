@@ -9,3 +9,4 @@ assetpulse/
 .continue/
 logs/
 sync_log.txt
+config.json
