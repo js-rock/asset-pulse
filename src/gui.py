@@ -3,10 +3,18 @@ import os
 import sys
 import logging
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, Scrollbar
 from .config import save_config, saved_watch_folder, saved_source_files, load_config
 from .os_utils import open_watched_folder
 from .copy_engine import copy_engine 
+
+class VerificationFilter(logging.Filter):
+    """Filters out messages containing 'Verified' from the target handler."""
+    def filter(self, record):
+        # Return False to suppress the message in the log file
+        if "Verified" in record.getMessage():
+            return False
+        return True
 
 class FolderMonitorGUI:
     def __init__(self, root):
@@ -122,9 +130,26 @@ class FolderMonitorGUI:
         # Scrollable Active Log Text Area
         self.log_frame = ttk.Frame(self.right_frame)
         self.log_frame.pack(fill=tk.BOTH, expand=True)
+
+        self.scrollbar = ttk.Scrollbar(self.log_frame, orient="vertical")
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)        
         
-        self.log_text = tk.Text(self.log_frame, state=tk.DISABLED, bg="#f0f0f0", font=("Consolas", 9))
+        self.log_text = tk.Text(
+            self.log_frame, 
+            state=tk.DISABLED, 
+            bg="#f0f0f0", 
+            font=("Consolas", 9),
+            yscrollcommand=self.scrollbar.set 
+        )
+        
+        # Configure the scrollbar to control the text widget's view
+        self.scrollbar.config(command=self.log_text.yview)
+
         self.log_text.pack(fill=tk.BOTH, expand=True)
+
+        self.scrollbar.config(command=self.log_text.yview)
+
+        self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)        
 
         # Initialize Logging Handler
         self.setup_logging_handler()
@@ -151,6 +176,11 @@ class FolderMonitorGUI:
         
         self.file_handler = logging.FileHandler("logs/asset_pulse.log")
         self.file_handler.setLevel(logging.INFO)
+        
+        # --- CHANGE: Apply the filter to the file handler only ---
+        verification_filter = VerificationFilter()
+        self.file_handler.addFilter(verification_filter)
+        
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         self.file_handler.setFormatter(formatter)
         self.logger.addHandler(self.file_handler)
@@ -170,13 +200,45 @@ class FolderMonitorGUI:
 
         root_logger = logging.getLogger()
         root_logger.handlers = []
+        # --- CHANGE: Apply filter to the root logger's file handler as well ---
+        verification_filter_root = VerificationFilter()
         root_logger.addHandler(self.file_handler)
-        root_logger.addHandler(tk_handler)
+        
+        tk_handler_root = TkHandler(self)
+        root_logger.addHandler(tk_handler_root)
         root_logger.setLevel(logging.INFO)
 
     def _update_log(self, message):
         """Append message to the text widget safely."""
         self.log_text.config(state=tk.NORMAL)
+
+        # Check if this is a verification success message
+        if "Verified" in message:
+            display_msg = message.replace("Verified", "[✓] Verified")
+            tag_name = f"verify_{len(self.log_text.index(tk.END))}"
+            self.log_text.insert(tk.END, display_msg + '\n', tag_name)
+            self.log_text.tag_config(tag_name, foreground="green", font=("Consolas", 9, "bold"))
+        else:
+            self.log_text.insert(tk.END, message + '\n')
+
+        # --- FIX FOR WIGGLE: Smart Auto-Scrolling ---
+        # Only scroll to the bottom if the user is already at the bottom.
+        # We check if 'end' is visible in the viewport.
+        try:
+            end_index = self.log_text.index(tk.END + "-1c")
+            top_line, top_char = map(int, self.log_text.yview()[0].split('.'))
+            bot_line, bot_char = map(int, self.log_text.yview()[1].split('.'))
+            
+            # If the last line is visible or we are at the very bottom, scroll down
+            if end_index <= bot_line + 1:
+                self.log_text.see(tk.END)
+        except Exception:
+            pass
+
+        self.log_text.config(state=tk.DISABLED)
+        
+        self.update_button_labels()
+
         self.log_text.insert(tk.END, message + '\n')
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
